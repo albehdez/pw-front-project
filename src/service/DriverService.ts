@@ -64,4 +64,49 @@ export class DriverService {
       console.error()
     }
   }
+
+  static get_driver_categories = async (token: string) => {
+    const url = 'http://localhost:2000/driver-category'
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if (!response.ok) {
+      throw new Error('Network response was not ok ' + response.statusText)
+    }
+    const data = await response.json()
+    return data
+  }
+
+  static get_driver_status = async (token: string) => {
+    const url = 'http://localhost:2000/driver-situation'
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if (!response.ok) {
+      throw new Error('Network response was not ok ' + response.statusText)
+    }
+    const data = await response.json()
+    return data
+  }
+
+  static get_driver_cars = async (token: string) => {
+    const url = 'http://localhost:2000/driver'
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if (!response.ok) {
+      throw new Error('Network response was not ok ' + response.statusText)
+    }
+    const data = await response.json()
+    return data
+  }
 }

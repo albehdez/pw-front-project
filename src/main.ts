@@ -23,6 +23,7 @@ import InputNumber from 'primevue/inputnumber'
 import PrimeVue from 'primevue/config'
 import Rating from 'primevue/rating'
 import Avatar from 'primevue/avatar'
+import { ref } from 'vue'
 import { createI18n } from 'vue-i18n'
 import EN from '@/languages/en.json'
 import ES from '@/languages/es.json'
@@ -32,9 +33,9 @@ import 'primevue/resources/themes/aura-light-green/theme.css'
 import 'primevue/resources/primevue.min.css'
 
 const app = createApp(App)
-
+let lan = ref(localStorage.getItem('language')).value
 const i18n = createI18n({
-  locale: 'EN',
+  locale: lan == null ? 'ES' : lan,
   messages: {
     EN: EN,
     ES: ES

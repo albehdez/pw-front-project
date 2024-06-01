@@ -21,6 +21,8 @@ export class UserService {
     role: string,
     token: string
   ) {
+    console.log(name + ',' + email, ',' + password + ',' + role + ',' + token)
+
     try {
       const response = await fetch('http://localhost:2000/auth/register', {
         method: 'POST',
@@ -49,7 +51,7 @@ export class UserService {
     try {
       const url = `http://localhost:2000/user/${email}`
       const response = await fetch(url, {
-        method: 'DEL',
+        method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
           // 'Content-Type': 'application/json'

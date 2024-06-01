@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { LoginService } from '@/service/LoginService'
+import { onMounted } from 'vue'
 // import { isConstructorDeclaration } from 'typescript'
 import { useRouter } from 'vue-router'
 const router = useRouter()
 // import { createStore } from 'vuex'
+
+onMounted(() => {
+  localStorage.setItem('language', 'ES')
+})
 
 let mail = ''
 let password = ''

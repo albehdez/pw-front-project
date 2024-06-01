@@ -6,6 +6,7 @@ import RequestView from '@/views/RequestView.vue'
 import CarView from '@/views/CarView.vue'
 import UserView from '@/views/UserView.vue'
 import ProgramationView from '@/views/ProgramationView.vue'
+import GroupView from '@/views/GroupView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +45,11 @@ const router = createRouter({
           path: '/home/programation',
           name: 'programation',
           component: ProgramationView
+        },
+        {
+          path: '/home/group',
+          name: 'group',
+          component: GroupView
         }
       ]
     }

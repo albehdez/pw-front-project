@@ -1,11 +1,11 @@
 <template>
   <div>
-    <h3>Administrar usuarios</h3>
+    <h3>{{ $t('Manage schedule') }}</h3>
     <div class="card">
       <Toolbar class="mb-4">
         <template #start>
           <Button
-            label="Agregar"
+            :label="$t('add')"
             icon="pi pi-plus"
             severity="success"
             class="mr-2"
@@ -13,23 +13,23 @@
             style="color: white"
           />
           <Button
-            label="Eliminar"
-            icon="pi pi-trash"
-            severity="danger"
-            @click="confirmDeleteSelected"
-            :disabled="!selectedProducts || !selectedProducts.length"
+            :label="$t('export')"
+            icon="pi pi-upload"
+            severity="help"
+            @click="report()"
             style="color: white"
           />
         </template>
 
         <template #end>
-          <Button
-            label="Exportar"
-            icon="pi pi-upload"
-            severity="help"
-            @click="console.log(products)"
-            style="color: white"
-          />
+          <div class="flex flex-wrap gap-2 align-items-center justify-content-between">
+            <IconField iconPosition="left">
+              <InputIcon>
+                <i class="pi pi-search" />
+              </InputIcon>
+              <InputText v-model="filters['global'].value" :placeholder="$t('search')" />
+            </IconField>
+          </div>
         </template>
       </Toolbar>
       <br />
@@ -42,48 +42,47 @@
         :rows="5"
         :filters="filters"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        :rowsPerPageOptions="[5, 10, 25]"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+        currentPageReportTemplate=" "
       >
-        <template #header>
-          <div class="flex flex-wrap gap-2 align-items-center justify-content-between">
-            <IconField iconPosition="left">
-              <InputIcon>
-                <i class="pi pi-search" />
-              </InputIcon>
-              <InputText v-model="filters['global'].value" placeholder="Buscar..." />
-            </IconField>
-          </div>
-        </template>
-
         <Column
-          selectionMode="multiple"
-          style="width: 3rem; margin: 5rem"
-          :exportable="false"
-        ></Column>
-        <Column field="name" header="Nombre" sortable style="min-width: 10rem"></Column>
-        <Column
-          field="email"
-          header="Dirección de correo"
+          field="programing_type.programing_type"
+          :header="$t('program type')"
           sortable
           style="min-width: 10rem"
         ></Column>
-        <Column field="role.role" header="Rol" sortable style="min-width: 10rem"></Column>
+        <Column
+          field="description"
+          :header="$t('Description')"
+          sortable
+          style="min-width: 10rem"
+        ></Column>
+        <Column
+          field="km_to_travel"
+          :header="$t('number of km')"
+          sortable
+          style="min-width: 10rem"
+        ></Column>
+
+        <Column
+          field="start_time"
+          :header="$t('Closing hour')"
+          sortable
+          style="min-width: 10rem"
+        ></Column>
+        <Column
+          field="end_time"
+          :header="$t('arrival schedule')"
+          sortable
+          style="min-width: 10rem"
+        ></Column>
+        <Column field="delay" :header="$t('delay time')" sortable style="min-width: 10rem"></Column>
 
         <Column :exportable="false" style="min-width: 7rem">
           <template #body="slotProps">
             <Button
-              icon="pi pi-pencil"
-              outlined
-              rounded
-              class="mr-2"
-              @click="editProduct(slotProps.data)"
-              style="color: green"
-            />
-            <Button
               icon="pi pi-trash"
               outlined
-              rounded
+              squared
               severity="danger"
               @click="confirmDeleteProduct(slotProps.data)"
               style="color: red"
@@ -94,78 +93,20 @@
     </div>
 
     <Dialog
-      v-model:visible="dialogVisible1"
-      header="Hoja de Ruta"
-      :style="{ width: '75vw' }"
-      maximizable
-      modal
-      :contentStyle="{ height: '300px' }"
-    >
-      <DataTable :value="customers" scrollable scrollHeight="flex" tableStyle="min-width: 50rem">
-        <Column field="viaje" header="Destino"></Column>
-        <Column field="country.name" header="kilometraje inicial"></Column>
-        <Column field="representative.name" header="kilometraje finales"></Column>
-        <!-- <Column field="company" header="Company"></Column> -->
-      </DataTable>
-      <template #footer>
-        <!-- <Button label="Ok" icon="pi pi-check" @click="dialogVisible = false" /> -->
-      </template>
-    </Dialog>
-
-    <Dialog
       v-model:visible="productDialog"
       :style="{ width: '450px' }"
-      header="Usuario"
+      :header="$t('schedule')"
       :modal="true"
       class="p-fluid"
     >
       <div class="field">
-        <label for="name">Nombre</label>
-        <InputText
-          id="name"
-          v-model.trim="product.name"
-          required="true"
-          autofocus
-          :invalid="submitted && !product.license_plate"
-        />
-        <small class="p-error" v-if="submitted && !product.name">El código es requerido.</small>
-      </div>
-      <div class="field">
-        <label for="description">Correo</label>
-        <InputText
-          id="email"
-          v-model.trim="product.email"
-          required="true"
-          autofocus
-          :invalid="submitted && !product.name"
-        />
-        <!-- <Textarea
-            id="description"
-            v-model="product.description"
-            required="true"
-            rows="3"
-            cols="20"
-          /> -->
-      </div>
-      <div class="field">
-        <label for="description">Contraseña</label>
-        <InputText
-          id="password"
-          v-model.trim="product.password"
-          required="true"
-          autofocus
-          type="password"
-          :invalid="submitted && !product.name"
-        />
-      </div>
-      <div class="field">
-        <label for="inventoryStatus" class="mb-3">Rol</label>
+        <label for="inventoryStatus" class="mb-3">{{ $t('program type') }}</label>
         <Dropdown
           id="rol"
-          v-model="product.rol"
+          v-model="product.type"
           :options="statuses"
           optionLabel="label"
-          placeholder="seleccione una rol"
+          :placeholder="$t('select a role')"
         >
           <template #value="slotProps">
             <div v-if="slotProps.value && slotProps.value.value">
@@ -183,64 +124,41 @@
           </template>
         </Dropdown>
       </div>
+      <div class="field">
+        <label for="name">{{ $t('Description') }}</label>
+        <Textarea
+          id="description"
+          v-model="product.description"
+          required="true"
+          rows="3"
+          cols="20"
+        />
+      </div>
+      <div class="field col">
+        <label for="price">Cantidad de km</label>
+        <InputNumber id="price" v-model="product.km" />
+      </div>
+      <div class="field">
+        <label for="name">Horario de salida</label>
+        <input type="time" name="horario" class="p-inputtext" v-model="product.timeout" />
+      </div>
+      <!-- <div id="numberSpinner">
+        <button id="decrement">-</button>
+        <input type="text" id="valueDisplay" readonly />
+        <button id="increment">+</button>
+      </div> -->
 
-      <!-- <div class="field">
-          <label class="mb-3">Category</label>
-          <div class="formgrid grid">
-            <div class="field-radiobutton col-6">
-              <RadioButton
-                id="category1"
-                name="category"
-                value="Accessories"
-                v-model="product.category"
-              />
-              <label for="category1">Accessories</label>
-            </div>
-            <div class="field-radiobutton col-6">
-              <RadioButton
-                id="category2"
-                name="category"
-                value="Clothing"
-                v-model="product.category"
-              />
-              <label for="category2">Clothing</label>
-            </div>
-            <div class="field-radiobutton col-6">
-              <RadioButton
-                id="category3"
-                name="category"
-                value="Electronics"
-                v-model="product.category"
-              />
-              <label for="category3">Electronics</label>
-            </div>
-            <div class="field-radiobutton col-6">
-              <RadioButton
-                id="category4"
-                name="category"
-                value="Fitness"
-                v-model="product.category"
-              />
-              <label for="category4">Fitness</label>
-            </div>
-          </div>
-        </div> -->
-
-      <div class="formgrid grid">
-        <!-- <div class="field col">
-            <label for="price">Price</label>
-            <InputNumber
-              id="price"
-              v-model="product.price"
-              mode="currency"
-              currency="USD"
-              locale="en-US"
-            />
-          </div> -->
+      <div class="field">
+        <label for="name">Horario de llegada</label>
+        <input type="time" name="horario" class="p-inputtext" v-model="product.timein" />
+      </div>
+      <div class="field col">
+        <label for="price">Tiempo de demora</label>
+        <InputNumber id="price" v-model="product.delay" />
       </div>
       <template #footer>
-        <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-        <Button label="Aceptar" icon="pi pi-check" text @click="saveProduct" />
+        <Button :label="$t('cancel')" icon="pi pi-times" text @click="hideDialog" />
+        <Button :label="$t('acept')" icon="pi pi-check" text @click="saveProduct" />
       </template>
     </Dialog>
 
@@ -290,13 +208,15 @@
 import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from 'primevue/api'
 import { useToast } from 'primevue/usetoast'
-import { CarService } from '@/service/CarService'
-import { UserService } from '@/service/UserService'
-
+import { ProgramationService } from '@/service/ProgramationService'
+import { ReportService } from '@/service/ReportService'
 onMounted(() => {
-  UserService.get_user(dato.token).then((data) => (products.value = data))
+  ProgramationService.get_programing(dato.token).then((data) => (products.value = data))
 })
 
+function report() {
+  ReportService.get_report_programing(dato.token)
+}
 let roadmap
 const dato = JSON.parse(localStorage.getItem('user_data') || '{}')
 let value = 'false'
@@ -313,14 +233,17 @@ const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 })
 const submitted = ref(false)
-const statuses = ref([
-  { label: 'Manager', value: 'Manager' },
-  { label: 'Administrador', value: 'Admin' }
-])
+const statuses = ref()
 
 const formatCurrency = (value) => {
   if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
   return
+}
+
+function load_programation() {
+  ProgramationService.get_programing_type(dato.token).then((data) => {
+    statuses.value = data
+  })
 }
 const openNew = () => {
   // console.log(products)
@@ -328,6 +251,7 @@ const openNew = () => {
   submitted.value = false
   productDialog.value = true
   value = true
+  load_programation()
 }
 const hideDialog = () => {
   productDialog.value = false
@@ -364,18 +288,33 @@ const saveProduct = async () => {
   //   }
 
   if (value) {
+    console.log(
+      product.value.type +
+        ',' +
+        product.value.description +
+        ',' +
+        product.value.km +
+        ',' +
+        product.value.timeout +
+        ',' +
+        product.value.timein +
+        ',' +
+        product.value.delay
+    )
     try {
-      await UserService.insert_user(
-        product.value.name,
-        product.value.email,
-        product.value.password,
-        product.value.rol.value,
+      await ProgramationService.insert_programing(
+        product.value.type,
+        product.value.timein,
+        product.value.timeout,
+        product.value.description,
+        product.value.km,
+        product.value.delay,
         dato.token
       )
-      return UserService.get_user(dato.token)
+
+      return ProgramationService.get_programing(dato.token)
         .then((data) => {
           products.value = data
-          console.log('User retrieved successfully', data)
         })
         .catch((error) => {
           console.error('Error retrieving user:', error)
@@ -385,7 +324,6 @@ const saveProduct = async () => {
     } finally {
       productDialog.value = false
     }
-  } else {
   }
 }
 const editProduct = (prod) => {
@@ -410,8 +348,8 @@ const deleteProduct = () => {
   //   life: 3000
   // })
 
-  UserService.delete_user(product.value.email, dato.token)
-  UserService.get_user(dato.token).then((data) => (products.value = data))
+  ProgramationService.delete_prog(product.value.id, dato.token)
+  ProgramationService.get_programing(dato.token).then((data) => (products.value = data))
 }
 const findIndexById = (id) => {
   let index = -1
@@ -467,4 +405,12 @@ const getStatusLabel = (status) => {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.field {
+  margin-bottom: 1rem;
+}
+
+.p-inputtext {
+  width: 100%;
+}
+</style>

@@ -1,11 +1,11 @@
 <template>
   <div>
-    <h3>Gestionar conductores</h3>
+    <h3>{{ $t('manage drivers') }}</h3>
     <div class="card">
       <Toolbar class="mb-4">
         <template #start>
           <Button
-            label="Agregar"
+            :label="$t('add')"
             icon="pi pi-plus"
             severity="success"
             class="mr-2"
@@ -13,23 +13,23 @@
             style="color: white"
           />
           <Button
-            label="Eliminar"
-            icon="pi pi-trash"
-            severity="danger"
-            @click="confirmDeleteSelected"
-            :disabled="!selectedProducts || !selectedProducts.length"
+            :label="$t('export')"
+            icon="pi pi-upload"
+            severity="help"
+            @click="report()"
             style="color: white"
           />
         </template>
 
         <template #end>
-          <Button
-            label="Exportar"
-            icon="pi pi-upload"
-            severity="help"
-            @click="console.log(products)"
-            style="color: white"
-          />
+          <div class="flex flex-wrap gap-2 align-items-center justify-content-between">
+            <IconField iconPosition="left">
+              <InputIcon>
+                <i class="pi pi-search" />
+              </InputIcon>
+              <InputText v-model="filters['global'].value" :placeholder="$t('search')" />
+            </IconField>
+          </div>
         </template>
       </Toolbar>
       <br />
@@ -42,49 +42,32 @@
         :rows="5"
         :filters="filters"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        :rowsPerPageOptions="[5, 10, 25]"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+        currentPageReportTemplate=" "
       >
-        <template #header>
-          <div class="flex flex-wrap gap-2 align-items-center justify-content-between">
-            <IconField iconPosition="left">
-              <InputIcon>
-                <i class="pi pi-search" />
-              </InputIcon>
-              <InputText v-model="filters['global'].value" placeholder="Buscar..." />
-            </IconField>
-          </div>
-        </template>
-
-        <Column
-          selectionMode="multiple"
-          style="width: 3rem; margin: 5rem"
-          :exportable="false"
-        ></Column>
         <Column
           field="identify_card"
           header="número de identidad"
           sortable
           style="min-width: 10rem"
         ></Column>
-        <Column field="name" header="Nombre" sortable style="min-width: 15rem"></Column>
+        <Column field="name" :header="$t('name')" sortable style="min-width: 15rem"></Column>
 
-        <Column field="address" header="Dirección" sortable style="min-width: 10rem"></Column>
+        <Column field="address" :header="$t('address')" sortable style="min-width: 10rem"></Column>
         <Column
           field="driver_situation.type_situation"
-          header="Situación"
+          :header="$t('situation')"
           sortable
           style="min-width: 10rem"
         ></Column>
         <Column
-          field="category.type_category"
-          header="Categoria"
+          field="driver_category.type_category"
+          :header="$t('category')"
           sortable
           style="min-width: 5rem"
         ></Column>
         <Column
           field="{{   car.permanent_car!=null ? car.permanent_car : '-' }}"
-          header="Carro asignado"
+          :header="$t('assigned car')"
           sortable
           style="min-width: 10rem"
         ></Column>
@@ -93,7 +76,7 @@
             <Button
               icon="pi pi-pencil"
               outlined
-              rounded
+              squared
               class="mr-2"
               @click="editProduct(slotProps.data)"
               style="color: green"
@@ -101,7 +84,7 @@
             <Button
               icon="pi pi-trash"
               outlined
-              rounded
+              squared
               severity="danger"
               @click="confirmDeleteProduct(slotProps.data)"
               style="color: red"
@@ -131,6 +114,7 @@
     </Dialog>
 
     <Dialog
+      :closable="false"
       v-model:visible="productDialog"
       :style="{ width: '450px' }"
       header="Conductor"
@@ -150,7 +134,7 @@
         <small class="p-error" v-if="submitted && !product.name">El código es requerido.</small>
       </div>
       <div class="field">
-        <label for="description">Marca</label>
+        <label for="description">Nombre</label>
         <InputText
           id="name"
           v-model.trim="product.brand"
@@ -168,6 +152,29 @@
       </div>
 
       <div class="field">
+        <label for="inventoryStatus" class="mb-3">Categoría</label>
+        <Dropdown
+          id="inventoryStatus"
+          v-model="product.type_situation"
+          :options="statuses"
+          optionLabel="label"
+          placeholder="seleccione una categoría"
+        >
+          <template #value="slotProps">
+            <div v-if="slotProps.value && slotProps.value.value">
+              <Tag
+                :value="slotProps.value.value"
+                :severity="getStatusLabel(slotProps.value.label)"
+              />
+            </div>
+            <div v-else-if="slotProps.value && !slotProps.value.value">
+              <Tag :value="slotProps.value" :severity="getStatusLabel(slotProps.value)" />
+            </div>
+            <span v-else>
+              {{ slotProps.placeholder }}
+            </span>
+          </template>
+        </Dropdown>
         <label for="inventoryStatus" class="mb-3">Situación</label>
         <Dropdown
           id="inventoryStatus"
@@ -191,49 +198,30 @@
             </span>
           </template>
         </Dropdown>
+        <label for="inventoryStatus" class="mb-3">Carro asignado</label>
+        <Dropdown
+          id="inventoryStatus"
+          v-model="product.type_situation"
+          :options="statuses"
+          optionLabel="label"
+          placeholder="seleccione un carro asignado"
+        >
+          <template #value="slotProps">
+            <div v-if="slotProps.value && slotProps.value.value">
+              <Tag
+                :value="slotProps.value.value"
+                :severity="getStatusLabel(slotProps.value.label)"
+              />
+            </div>
+            <div v-else-if="slotProps.value && !slotProps.value.value">
+              <Tag :value="slotProps.value" :severity="getStatusLabel(slotProps.value)" />
+            </div>
+            <span v-else>
+              {{ slotProps.placeholder }}
+            </span>
+          </template>
+        </Dropdown>
       </div>
-
-      <!-- <div class="field">
-        <label class="mb-3">Category</label>
-        <div class="formgrid grid">
-          <div class="field-radiobutton col-6">
-            <RadioButton
-              id="category1"
-              name="category"
-              value="Accessories"
-              v-model="product.category"
-            />
-            <label for="category1">Accessories</label>
-          </div>
-          <div class="field-radiobutton col-6">
-            <RadioButton
-              id="category2"
-              name="category"
-              value="Clothing"
-              v-model="product.category"
-            />
-            <label for="category2">Clothing</label>
-          </div>
-          <div class="field-radiobutton col-6">
-            <RadioButton
-              id="category3"
-              name="category"
-              value="Electronics"
-              v-model="product.category"
-            />
-            <label for="category3">Electronics</label>
-          </div>
-          <div class="field-radiobutton col-6">
-            <RadioButton
-              id="category4"
-              name="category"
-              value="Fitness"
-              v-model="product.category"
-            />
-            <label for="category4">Fitness</label>
-          </div>
-        </div>
-      </div> -->
 
       <div class="formgrid grid">
         <!-- <div class="field col">
@@ -247,17 +235,19 @@
           />
         </div> -->
         <div class="field col">
-          <label for="quantity">Cantidad de Asientos</label>
-          <InputNumber id="quantity" v-model="product.number_seats" integeronly />
-        </div>
-        <div class="field col" v-if="value">
-          <label for="quantity">Kilómetros recorridos</label>
-          <InputNumber id="quantity" v-model="product.km_available" integeronly />
+          <label for="quantity">Dirección</label>
+          <InputText
+            id="name"
+            v-model.trim="product.number_seats"
+            required="true"
+            autofocus
+            :invalid="submitted && !product.identify_card"
+          />
         </div>
       </div>
       <template #footer>
-        <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-        <Button label="Aceptar" icon="pi pi-check" text @click="saveProduct" />
+        <Button :label="$t('cancel')" icon="pi pi-times" text @click="hideDialog" />
+        <Button :label="$t('acept')" icon="pi pi-check" text @click="saveProduct" />
       </template>
     </Dialog>
 
@@ -308,7 +298,7 @@ import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from 'primevue/api'
 import { useToast } from 'primevue/usetoast'
 import { DriverService } from '@/service/DriverService'
-
+import { ReportService } from '@/service/ReportService'
 onMounted(() => {
   DriverService.get_driver(dato.token).then((data) => (products.value = data))
   // console.log(products)
@@ -330,11 +320,24 @@ const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 })
 const submitted = ref(false)
-const statuses = ref([
-  { label: 'INSTOCK', value: 'Inside' },
-  { label: 'LOWSTOCK', value: 'lowstock' },
-  { label: 'OUTOFSTOCK', value: 'outofstock' }
-])
+const statuses = ref([])
+const category = ref([])
+const cars = ref([])
+
+const load_status = () => {
+  DriverService.get_driver_status(dato.token).then((data) => (statuses.value = data))
+}
+
+const load_categories = () => {
+  DriverService.get_driver_categories(dato.token).then((data) => (category.value = data))
+}
+const load_cars = () => {
+  DriverService.get_driver_cars(dato.token).then((data) => (cars.value = data))
+}
+
+const report = () => {
+  ReportService.get_report_driver(dato.token)
+}
 
 const formatCurrency = (value) => {
   if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })

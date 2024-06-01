@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h3>{{ $t('manage requests') }}</h3>
+    <h3>{{ $t('manage Groups') }}</h3>
     <div class="card">
       <Toolbar class="mb-4">
         <template #start>
@@ -16,7 +16,7 @@
             :label="$t('export')"
             icon="pi pi-upload"
             severity="help"
-            @click=""
+            @click="report()"
             style="color: white"
           />
         </template>
@@ -44,22 +44,30 @@
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         currentPageReportTemplate=" "
       >
-        <Column field="request_date" header="Fecha" sortable style="min-width: 8rem"></Column>
+        <Column field="id_group" :header="$t('code')" sortable style="min-width: 10rem"></Column>
         <Column
-          field="turistic_group.id_group"
-          header="Grpo"
+          field="number_turist"
+          :header="$t('amount of people')"
           sortable
           style="min-width: 10rem"
         ></Column>
         <Column
-          field="programing.description"
-          header="kilómetros recorridos"
+          field="country.name"
+          :header="$t('country')"
           sortable
-          style="min-width: 16rem"
+          style="min-width: 10rem"
         ></Column>
 
         <Column :exportable="false" style="min-width: 7rem">
           <template #body="slotProps">
+            <Button
+              icon="pi pi-pencil"
+              outlined
+              squared
+              class="mr-2"
+              @click="editProduct(slotProps.data)"
+              style="color: green"
+            />
             <Button
               icon="pi pi-trash"
               outlined
@@ -74,20 +82,40 @@
     </div>
 
     <Dialog
+      v-model:visible="dialogVisible1"
+      header="Hoja de Ruta"
+      :style="{ width: '75vw' }"
+      maximizable
+      modal
+      :contentStyle="{ height: '300px' }"
+    >
+      <DataTable :value="customers" scrollable scrollHeight="flex" tableStyle="min-width: 50rem">
+        <Column field="viaje" header="Destino"></Column>
+        <Column field="country.name" header="kilometraje inicial"></Column>
+        <Column field="representative.name" header="kilometraje finales"></Column>
+        <!-- <Column field="company" header="Company"></Column> -->
+      </DataTable>
+      <template #footer>
+        <!-- <Button label="Ok" icon="pi pi-check" @click="dialogVisible = false" /> -->
+      </template>
+    </Dialog>
+
+    <Dialog
+      :closable="false"
       v-model:visible="productDialog"
       :style="{ width: '450px' }"
-      header="Solicitud"
+      :header="$t('group')"
       :modal="true"
       class="p-fluid"
     >
       <div class="field">
-        <label for="inventoryStatus" class="mb-3">grupo</label>
+        <label for="inventoryStatus" class="mb-3">{{ $t('country') }}</label>
         <Dropdown
-          id="inventoryStatus"
-          v-model="product.group"
-          :options="statuses_group"
+          id="rol"
+          v-model="product.name"
+          :options="statuses"
           optionLabel="label"
-          placeholder="seleccione una situación"
+          placeholder="seleccione un país"
         >
           <template #value="slotProps">
             <div v-if="slotProps.value && slotProps.value.value">
@@ -105,114 +133,67 @@
           </template>
         </Dropdown>
       </div>
+      <br />
       <div class="field">
-        <label for="name">Fecha</label>
-        <input type="date" class="p-inputtext" />
-      </div>
-      <div class="field">
-        <label for="name">Correo del cliente</label>
-        <InputText
-          id="name"
-          v-model.trim="product.license_plate"
-          required="true"
-          @click="console.log(product.license_plate)"
-          autofocus
-          :invalid="submitted && !product.license_plate"
-        />
+        <label for="name">{{ $t('amount of people') }}</label>
+        <InputNumber id="quantity" v-model="product.number_turist" integeronly />
         <!-- <small class="p-error" v-if="submitted && !product.name">El código es requerido.</small> -->
       </div>
-      <div class="field">
-        <label for="inventoryStatus" class="mb-3">Carro</label>
-        <Dropdown
-          id="inventoryStatus"
-          v-model="product.type_situation"
-          :options="statuses"
-          optionLabel="label"
-          placeholder="seleccione una situación"
-        >
-          <template #value="slotProps">
-            <div v-if="slotProps.value && slotProps.value.value">
-              <Tag
-                :value="slotProps.value.value"
-                :severity="getStatusLabel(slotProps.value.label)"
-              />
-            </div>
-            <div v-else-if="slotProps.value && !slotProps.value.value">
-              <Tag :value="slotProps.value" :severity="getStatusLabel(slotProps.value)" />
-            </div>
-            <span v-else>
-              {{ slotProps.placeholder }}
-            </span>
-          </template>
-        </Dropdown>
-      </div>
-      <div class="field">
-        <label for="inventoryStatus" class="mb-3">Chofer</label>
-        <Dropdown
-          id="inventoryStatus"
-          v-model="product.type_situation"
-          :options="statuses"
-          optionLabel="label"
-          placeholder="seleccione una situación"
-        >
-          <template #value="slotProps">
-            <div v-if="slotProps.value && slotProps.value.value">
-              <Tag
-                :value="slotProps.value.value"
-                :severity="getStatusLabel(slotProps.value.label)"
-              />
-            </div>
-            <div v-else-if="slotProps.value && !slotProps.value.value">
-              <Tag :value="slotProps.value" :severity="getStatusLabel(slotProps.value)" />
-            </div>
-            <span v-else>
-              {{ slotProps.placeholder }}
-            </span>
-          </template>
-        </Dropdown>
-      </div>
-      <!-- <div class="field">
-        <label class="mb-3">Category</label>
-        <div class="formgrid grid">
-          <div class="field-radiobutton col-6">
-            <RadioButton
-              id="category1"
-              name="category"
-              value="Accessories"
-              v-model="product.category"
-            />
-            <label for="category1">Accessories</label>
-          </div>
-          <div class="field-radiobutton col-6">
-            <RadioButton
-              id="category2"
-              name="category"
-              value="Clothing"
-              v-model="product.category"
-            />
-            <label for="category2">Clothing</label>
-          </div>
-          <div class="field-radiobutton col-6">
-            <RadioButton
-              id="category3"
-              name="category"
-              value="Electronics"
-              v-model="product.category"
-            />
-            <label for="category3">Electronics</label>
-          </div>
-          <div class="field-radiobutton col-6">
-            <RadioButton
-              id="category4"
-              name="category"
-              value="Fitness"
-              v-model="product.category"
-            />
-            <label for="category4">Fitness</label>
-          </div>
-        </div>
-      </div> -->
 
+      <!-- <div class="field">
+          <label class="mb-3">Category</label>
+          <div class="formgrid grid">
+            <div class="field-radiobutton col-6">
+              <RadioButton
+                id="category1"
+                name="category"
+                value="Accessories"
+                v-model="product.category"
+              />
+              <label for="category1">Accessories</label>
+            </div>
+            <div class="field-radiobutton col-6">
+              <RadioButton
+                id="category2"
+                name="category"
+                value="Clothing"
+                v-model="product.category"
+              />
+              <label for="category2">Clothing</label>
+            </div>
+            <div class="field-radiobutton col-6">
+              <RadioButton
+                id="category3"
+                name="category"
+                value="Electronics"
+                v-model="product.category"
+              />
+              <label for="category3">Electronics</label>
+            </div>
+            <div class="field-radiobutton col-6">
+              <RadioButton
+                id="category4"
+                name="category"
+                value="Fitness"
+                v-model="product.category"
+              />
+              <label for="category4">Fitness</label>
+            </div>
+          </div>
+        </div> -->
+
+      <div class="formgrid grid">
+        <!-- <div class="field col">
+            <label for="price">Price</label>
+            <InputNumber
+              id="price"
+              v-model="product.price"
+              mode="currency"
+              currency="USD"
+              locale="en-US"
+            />
+          </div> -->
+      </div>
       <template #footer>
         <Button :label="$t('cancel')" icon="pi pi-times" text @click="hideDialog" />
         <Button :label="$t('acept')" icon="pi pi-check" text @click="saveProduct" />
@@ -228,8 +209,8 @@
       <div class="confirmation-content">
         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
         <span v-if="product">
-          Esta seguro que desea elimar el vehículo con código {{ product.license_plate }}? <br /><b>
-            Esta acción no padra deshacerse</b
+          Esta seguro que desea eliminar el usuario? <br /><b>
+            Esta acción no se podrá deshacer.</b
           ></span
         >
       </div>
@@ -248,8 +229,8 @@
       <div class="confirmation-content">
         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
         <span v-if="product">
-          Esta seguro que desea eliminar estos vehículos?<br /><b>
-            Esta acción no padra deshacerse</b
+          Esta seguro que desea eliminar estos usuarios?<br /><b>
+            Esta acción no se podrá deshacer.</b
           ></span
         >
       </div>
@@ -265,33 +246,17 @@
 import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from 'primevue/api'
 import { useToast } from 'primevue/usetoast'
-import { RequestService } from '@/service/RequestService'
-import { UserService } from '@/service/UserService'
-const prueba4 = (id) => {
-  // console.log(id)
-  // CarService.get_roadMap(dato.token, id).then((data) => (roadmap.value = data))
-  // console.log(product.value)
-}
+import { GroupService } from '@/service/GroupService'
+import { ReportService } from '@/service/ReportService'
 
-const prueba = () => {
-  // ReportService.get_report1(dato.token)
-  // console.log(product.value)
-}
 onMounted(() => {
-  RequestService.get_requests(dato.token).then((data) => (products.value = data))
-  console.log(product.value)
+  GroupService.get_groups(dato.token).then((data) => (products.value = data))
 })
 
-function load_groups() {
-  UserService.get_user(dato.token).then((data) => (statuses_group.value = data))
-  console.log(product.value)
-}
-
-let roadmap = ref()
+let roadmap
 const dato = JSON.parse(localStorage.getItem('user_data') || '{}')
 let value = 'false'
 const dialogVisible1 = ref(false)
-const dialogVisible2 = ref(false)
 const toast = useToast()
 const dt = ref()
 let products = ref()
@@ -304,14 +269,9 @@ const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS }
 })
 const submitted = ref(false)
-const statuses_user = ref([])
-const statuses_group = ref([])
-const statuses_carro = ref([])
-const statuses_chofer = ref([])
-
-const formatCurrency = (value) => {
-  if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
-  return
+const statuses = ref([])
+const load_countries = () => {
+  GroupService.get_country_groups(dato.token).then((data) => (statuses.value = data))
 }
 const openNew = () => {
   // console.log(products)
@@ -319,11 +279,15 @@ const openNew = () => {
   submitted.value = false
   productDialog.value = true
   value = true
-  load_groups()
+  load_countries()
 }
 const hideDialog = () => {
   productDialog.value = false
   submitted.value = false
+}
+
+const report = () => {
+  ReportService.get_report_group(dato.token)
 }
 const saveProduct = async () => {
   submitted.value = true
@@ -356,43 +320,47 @@ const saveProduct = async () => {
   //   }
 
   if (value) {
-    await CarService.insert_car(
-      product.value.brand,
-      product.value.number_seats,
-      product.value.km_available,
-      product.value.license_plate,
-      product.value.type_situation.value,
-      dato.token
-    )
-    return CarService.get_cars(dato.token).then((data) => {
-      products.value = data
-      console.log('User retrieved successfully', data)
-    })
+    try {
+      await GroupService.insert_group(product.value.number_turist, product.value.name, dato.token)
+      return GroupService.get_groups(dato.token)
+        .then((data) => {
+          products.value = data
+        })
+        .catch((error) => {
+          console.error('Error retrieving user:', error)
+        })
+    } catch (error) {
+      console.error('Error inserting user:', error)
+    } finally {
+      productDialog.value = false
+    }
   } else {
-    await CarService.update_car(
-      product.value.id,
-      product.value.brand,
-      product.value.number_seats,
-      product.value.km_available,
-      product.value.license_plate,
-      product.value.type_situation.value,
-      dato.token
-    )
-    return CarService.get_cars(dato.token).then((data) => {
-      products.value = data
-    })
+    try {
+      await GroupService.update_group(
+        product.value.id,
+        product.value.number_turist,
+        product.value.name,
+        dato.token
+      )
+      return GroupService.get_groups(dato.token)
+        .then((data) => {
+          products.value = data
+        })
+        .catch((error) => {
+          console.error('Error retrieving user:', error)
+        })
+    } catch (error) {
+      console.error('Error inserting user:', error)
+    } finally {
+      productDialog.value = false
+    }
   }
-  CarService.get_cars(dato.token).then((data) => {
-    products.value = data
-  }),
-    (productDialog.value = false)
-  // product.value = {}
-  // }
 }
 const editProduct = (prod) => {
   value = false
   product.value = { ...prod }
   productDialog.value = true
+  load_countries()
 }
 const confirmDeleteProduct = (prod) => {
   product.value = prod
@@ -410,11 +378,11 @@ const deleteProduct = async () => {
   //   detail: 'Product Deleted',
   //   life: 3000
   // })
-  // console.log(product.value.id)
-  // console.log(product.value.id)
-  await CarService.delete_car(product.value.id, dato.token)
-  return CarService.get_cars(dato.token).then((data) => {
+
+  await GroupService.delete_group(product.value.id, dato.token)
+  return GroupService.get_groups(dato.token).then((data) => {
     products.value = data
+    deleteProductDialog.value = false
   })
 }
 const findIndexById = (id) => {
@@ -455,28 +423,20 @@ const deleteSelectedProducts = () => {
 }
 
 const getStatusLabel = (status) => {
-  switch (status) {
-    case 'INSTOCK':
-      return 'inside'
+  // switch (status) {
+  // case 'INSTOCK':
+  //   return 'inside'
 
-    case 'LOWSTOCK':
-      return 'warning'
+  // case 'LOWSTOCK':
+  //   return 'warning'
 
-    case 'OUTOFSTOCK':
-      return 'danger'
+  // case 'OUTOFSTOCK':
+  //   return 'danger'
 
-    default:
-      return null
-  }
+  // default:
+  return status
+  // }
 }
 </script>
 
-<style scoped>
-.field {
-  margin-bottom: 1rem;
-}
-
-.p-inputtext {
-  width: 100%;
-}
-</style>
+<style scoped></style>

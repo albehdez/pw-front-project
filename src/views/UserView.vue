@@ -5,7 +5,7 @@
       <Toolbar class="mb-4">
         <template #start>
           <Button
-            label="Agregar"
+            :label="$t('add')"
             icon="pi pi-plus"
             severity="success"
             class="mr-2"
@@ -13,23 +13,23 @@
             style="color: white"
           />
           <Button
-            label="Eliminar"
-            icon="pi pi-trash"
-            severity="danger"
-            @click="confirmDeleteSelected"
-            :disabled="!selectedProducts || !selectedProducts.length"
-            style="color: white"
-          />
-        </template>
-
-        <template #end>
-          <Button
-            label="Exportar"
+            :label="$t('export')"
             icon="pi pi-upload"
             severity="help"
             @click="console.log(products)"
             style="color: white"
           />
+        </template>
+
+        <template #end>
+          <div class="flex flex-wrap gap-2 align-items-center justify-content-between">
+            <IconField iconPosition="left">
+              <InputIcon>
+                <i class="pi pi-search" />
+              </InputIcon>
+              <InputText v-model="filters['global'].value" :placeholder="$t('search')" />
+            </IconField>
+          </div>
         </template>
       </Toolbar>
       <br />
@@ -42,40 +42,18 @@
         :rows="5"
         :filters="filters"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        :rowsPerPageOptions="[5, 10, 25]"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+        currentPageReportTemplate=" "
       >
-        <template #header>
-          <div class="flex flex-wrap gap-2 align-items-center justify-content-between">
-            <IconField iconPosition="left">
-              <InputIcon>
-                <i class="pi pi-search" />
-              </InputIcon>
-              <InputText v-model="filters['global'].value" placeholder="Buscar..." />
-            </IconField>
-          </div>
-        </template>
-
-        <Column
-          selectionMode="multiple"
-          style="width: 3rem; margin: 5rem"
-          :exportable="false"
-        ></Column>
-        <Column field="name" header="Nombre" sortable style="min-width: 10rem"></Column>
-        <Column
-          field="email"
-          header="Dirección de correo"
-          sortable
-          style="min-width: 10rem"
-        ></Column>
-        <Column field="role.role" header="Rol" sortable style="min-width: 10rem"></Column>
+        <Column field="name" :header="$t('name')" sortable style="min-width: 10rem"></Column>
+        <Column field="email" :header="$t('email')" sortable style="min-width: 10rem"></Column>
+        <Column field="role.role" :header="$t('role')" sortable style="min-width: 10rem"></Column>
 
         <Column :exportable="false" style="min-width: 7rem">
           <template #body="slotProps">
             <Button
               icon="pi pi-pencil"
               outlined
-              rounded
+              squared
               class="mr-2"
               @click="editProduct(slotProps.data)"
               style="color: green"
@@ -83,7 +61,7 @@
             <Button
               icon="pi pi-trash"
               outlined
-              rounded
+              squared
               severity="danger"
               @click="confirmDeleteProduct(slotProps.data)"
               style="color: red"
@@ -239,8 +217,8 @@
           </div> -->
       </div>
       <template #footer>
-        <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-        <Button label="Aceptar" icon="pi pi-check" text @click="saveProduct" />
+        <Button :label="$t('cancel')" icon="pi pi-times" text @click="hideDialog" />
+        <Button :label="$t('acept')" icon="pi pi-check" text @click="saveProduct" />
       </template>
     </Dialog>
 
@@ -314,8 +292,9 @@ const filters = ref({
 })
 const submitted = ref(false)
 const statuses = ref([
-  { label: 'Manager', value: 'Manager' },
-  { label: 'Administrador', value: 'Admin' }
+  { label: 'GERENTE', value: 'Manager' },
+  { label: 'ADMINISTRADOR', value: 'Admin' },
+  { label: 'CLIENTE', value: 'Client' }
 ])
 
 const formatCurrency = (value) => {
@@ -394,8 +373,12 @@ const editProduct = (prod) => {
   productDialog.value = true
 }
 const confirmDeleteProduct = (prod) => {
-  product.value = prod
-  deleteProductDialog.value = true
+  if (prod.email != dato.email) {
+    product.value = prod
+    deleteProductDialog.value = true
+  } else {
+    console.log('no se puede eliminar este usuaurio')
+  }
 }
 const deleteProduct = () => {
   // products.value = products.value.filter((val) => val.id !== product.value.id)

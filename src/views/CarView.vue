@@ -1,11 +1,11 @@
 <template>
   <div>
-    <h3>Gestionar vehículos</h3>
+    <h3>{{ $t('manage-vehicles') }}</h3>
     <div class="card">
       <Toolbar class="mb-4">
         <template #start>
           <Button
-            label="Agregar"
+            :label="$t('add')"
             icon="pi pi-plus"
             severity="success"
             class="mr-2"
@@ -13,23 +13,23 @@
             style="color: white"
           />
           <Button
-            label="Eliminar"
-            icon="pi pi-trash"
-            severity="danger"
-            @click="confirmDeleteSelected"
-            :disabled="!selectedProducts || !selectedProducts.length"
+            :label="$t('export')"
+            icon="pi pi-upload"
+            severity="help"
+            @click="report()"
             style="color: white"
           />
         </template>
 
         <template #end>
-          <Button
-            label="Exportar"
-            icon="pi pi-upload"
-            severity="help"
-            @click="prueba(2)"
-            style="color: white"
-          />
+          <div class="flex flex-wrap gap-2 align-items-center justify-content-between">
+            <IconField iconPosition="left">
+              <InputIcon>
+                <i class="pi pi-search" />
+              </InputIcon>
+              <InputText v-model="filters['global'].value" :placeholder="$t('search')" />
+            </IconField>
+          </div>
         </template>
       </Toolbar>
       <br />
@@ -42,62 +42,50 @@
         :rows="5"
         :filters="filters"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        :rowsPerPageOptions="[5, 10, 25]"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+        currentPageReportTemplate=" "
       >
-        <template #header>
-          <div class="flex flex-wrap gap-2 align-items-center justify-content-between">
-            <IconField iconPosition="left">
-              <InputIcon>
-                <i class="pi pi-search" />
-              </InputIcon>
-              <InputText v-model="filters['global'].value" placeholder="Buscar..." />
-            </IconField>
-          </div>
-        </template>
-
         <Column
-          selectionMode="multiple"
-          style="width: 3rem; margin: 5rem"
-          :exportable="false"
+          field="license_plate"
+          :header="$t('code')"
+          sortable
+          style="min-width: 8rem"
         ></Column>
-        <Column field="license_plate" header="Código" sortable style="min-width: 8rem"></Column>
-        <Column field="brand" header="Marca" sortable style="min-width: 10rem"></Column>
+        <Column field="brand" :header="$t('brand')" sortable style="min-width: 10rem"></Column>
         <Column
           field="car_situation.type_situation"
-          header="Situación"
+          :header="$t('situation')"
           sortable
           style="min-width: 10rem"
         ></Column>
         <Column
           field="number_seats"
-          header="Numero de asientos"
+          :header="$t('seats_number')"
           sortable
           style="min-width: 16rem"
         ></Column>
         <Column
           field="km_available"
-          header="kilómetros recorridos"
+          :header="$t('kilometers traveled')"
           sortable
           style="min-width: 16rem"
         ></Column>
-        <Column :exportable="false" header="Hoja de ruta">
+        <!-- <Column :exportable="false" header="Hoja de ruta">
           <template #body="slotProps"
             ><Button
               label="mostrar"
               icon="pi pi-table"
-              @click="(dialogVisible1 = true), (roadmap = slotProps.data)"
+              @click="(dialogVisible1 = true), prueba4(slotProps.data.id)"
               style="color: white"
             />
           </template>
           /></Column
-        >
+        > -->
         <Column :exportable="false" style="min-width: 7rem">
           <template #body="slotProps">
             <Button
               icon="pi pi-pencil"
               outlined
-              rounded
+              squared
               class="mr-2"
               @click="editProduct(slotProps.data)"
               style="color: green"
@@ -105,7 +93,7 @@
             <Button
               icon="pi pi-trash"
               outlined
-              rounded
+              squared
               severity="danger"
               @click="confirmDeleteProduct(slotProps.data)"
               style="color: red"
@@ -123,10 +111,10 @@
       modal
       :contentStyle="{ height: '300px' }"
     >
-      <DataTable :value="customers" scrollable scrollHeight="flex" tableStyle="min-width: 50rem">
-        <Column field="viaje" header="Destino"></Column>
-        <Column field="country.name" header="kilometraje inicial"></Column>
-        <Column field="representative.name" header="kilometraje finales"></Column>
+      <DataTable :value="roadmap" scrollable scrollHeight="flex" tableStyle="min-width: 50rem">
+        <!-- <Column field="viaje" header="Destino"></Column> -->
+        <Column field="km_start" header="kilometraje inicial"></Column>
+        <Column field="km_end" header="kilometraje finales"></Column>
         <!-- <Column field="company" header="Company"></Column> -->
       </DataTable>
       <template #footer>
@@ -135,6 +123,7 @@
     </Dialog>
 
     <Dialog
+      :closable="false"
       v-model:visible="productDialog"
       :style="{ width: '450px' }"
       header="Vehículo"
@@ -151,7 +140,7 @@
           autofocus
           :invalid="submitted && !product.license_plate"
         />
-        <small class="p-error" v-if="submitted && !product.name">El código es requerido.</small>
+        <!-- <small class="p-error" v-if="submitted && !product.name">El código es requerido.</small> -->
       </div>
       <div class="field">
         <label for="description">Marca</label>
@@ -160,7 +149,7 @@
           v-model.trim="product.brand"
           required="true"
           autofocus
-          :invalid="submitted && !product.name"
+          :invalid="submitted && !product.brand"
         />
         <!-- <Textarea
           id="description"
@@ -260,28 +249,28 @@
         </div>
       </div>
       <template #footer>
-        <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-        <Button label="Aceptar" icon="pi pi-check" text @click="saveProduct" />
+        <Button :label="$t('cancel')" icon="pi pi-times" text @click="hideDialog" />
+        <Button :label="$t('acept')" icon="pi pi-check" text @click="saveProduct" />
       </template>
     </Dialog>
 
     <Dialog
       v-model:visible="deleteProductDialog"
       :style="{ width: '450px' }"
-      header="Confirmar"
+      :header="$t('confirm')"
       :modal="true"
     >
       <div class="confirmation-content">
         <i class="pi pi-exclamation-triangle mr-3" style="font-size: 2rem" />
         <span v-if="product">
-          Esta seguro que desea elimar el vehículo con código {{ product.license_plate }}? <br /><b>
-            Esta acción no padra deshacerse</b
+          {{ $t('delete-car-message') }} {{ product.license_plate }}? <br /><b>
+            {{ $t('this-action') }}</b
           ></span
         >
       </div>
       <template #footer>
-        <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
-        <Button label="Sí" icon="pi pi-check" text @click="deleteProduct" />
+        <Button :label="$t('no')" icon="pi pi-times" text @click="deleteProductDialog = false" />
+        <Button :label="$t('yes')" icon="pi pi-check" text @click="deleteProduct" />
       </template>
     </Dialog>
 
@@ -300,8 +289,8 @@
         >
       </div>
       <template #footer>
-        <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
-        <Button label="Sí" icon="pi pi-check" text @click="deleteSelectedProducts" />
+        <Button :label="$t('no')" icon="pi pi-times" text @click="deleteProductsDialog = false" />
+        <Button :label="$t('yes')" icon="pi pi-check" text @click="deleteSelectedProducts" />
       </template>
     </Dialog>
   </div>
@@ -312,15 +301,27 @@ import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from 'primevue/api'
 import { useToast } from 'primevue/usetoast'
 import { CarService } from '@/service/CarService'
+import { ReportService } from '@/service/ReportService'
 
+const prueba4 = (id) => {
+  // console.log(id)
+  // CarService.get_roadMap(dato.token, id).then((data) => (roadmap.value = data))
+  // console.log(product.value)
+}
+
+const report = () => {
+  ReportService.get_report_car(dato.token)
+  // console.log(product.value)
+}
 onMounted(() => {
   CarService.get_cars(dato.token).then((data) => (products.value = data))
 })
 
-let roadmap
+let roadmap = ref()
 const dato = JSON.parse(localStorage.getItem('user_data') || '{}')
 let value = 'false'
 const dialogVisible1 = ref(false)
+const dialogVisible2 = ref(false)
 const toast = useToast()
 const dt = ref()
 let products = ref()
@@ -334,9 +335,9 @@ const filters = ref({
 })
 const submitted = ref(false)
 const statuses = ref([
-  { label: 'INSTOCK', value: 'Inside' },
-  { label: 'LOWSTOCK', value: 'lowstock' },
-  { label: 'OUTOFSTOCK', value: 'outofstock' }
+  { label: 'DISPONIBLE', value: 'Disponible' },
+  { label: 'INTERIOR', value: 'Interior' },
+  { label: 'TALLER', value: 'Taller' }
 ])
 
 const formatCurrency = (value) => {
@@ -398,6 +399,18 @@ const saveProduct = async () => {
       console.log('User retrieved successfully', data)
     })
   } else {
+    await CarService.update_car(
+      product.value.id,
+      product.value.brand,
+      product.value.number_seats,
+      product.value.km_available,
+      product.value.license_plate,
+      product.value.type_situation.value,
+      dato.token
+    )
+    return CarService.get_cars(dato.token).then((data) => {
+      products.value = data
+    })
   }
   CarService.get_cars(dato.token).then((data) => {
     products.value = data
@@ -415,7 +428,7 @@ const confirmDeleteProduct = (prod) => {
   product.value = prod
   deleteProductDialog.value = true
 }
-const deleteProduct = () => {
+const deleteProduct = async () => {
   // products.value = products.value.filter((val) => val.id !== product.value.id)
   // console.log(product.value.filter(val))
   // deleteProductDialog.value = false
@@ -428,8 +441,11 @@ const deleteProduct = () => {
   //   life: 3000
   // })
   // console.log(product.value.id)
-  CarService.delete_car(product.value.id, dato.token)
-  // CarService.get_cars(dato.token).then((data) => (products.value = data))
+  // console.log(product.value.id)
+  await CarService.delete_car(product.value.id, dato.token)
+  return CarService.get_cars(dato.token).then((data) => {
+    products.value = data
+  })
 }
 const findIndexById = (id) => {
   let index = -1

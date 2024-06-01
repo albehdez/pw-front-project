@@ -1,7 +1,15 @@
 <script setup>
+import { ref } from 'vue'
+const product = null
 const dato = JSON.parse(localStorage.getItem('user_data') || '{}')
 let name = dato.name
 let page_title = 'prueba'
+const dialogVisible1 = ref(false)
+function changeLanguage(language) {
+  localStorage.setItem('language', language)
+  console.log(localStorage.getItem('language'))
+  window.location.reload()
+}
 </script>
 <template>
   <body class="fix-header">
@@ -286,16 +294,18 @@ let page_title = 'prueba'
                 </li>
               </ul>
             </li>
-            <!-- /.Megamenu -->
           </ul>
           <ul class="nav navbar-top-links navbar-right pull-right">
-            <li class="in">
-              <div class="translate">
-                <a href="#" id="idioma" class="idioma">
-                  <img class="img-flag" src="../assets/banderas/spain1.svg" alt="Icono bandera" />
-                  <img class="img-flag" src="../assets/banderas/bottom.svg" alt="Icono bottom" />
-                </a>
-              </div>
+            <li class="in"></li>
+            <li>
+              <a
+                @click="dialogVisible1 = true"
+                class="dropdown-toggle waves-effect waves-light"
+                data-toggle="dropdown"
+                href="#"
+              >
+                <i class="pi pi-language"></i>
+              </a>
             </li>
             <li class="dropdown">
               <a class="dropdown-toggle profile-pic" data-toggle="dropdown" href="#">
@@ -318,7 +328,7 @@ let page_title = 'prueba'
                 <li>
                   <a href="#"
                     ><i class="fa fa-power-off"></i
-                    ><RouterLink to="/" style="color: black"> Cerrar sesión</RouterLink>
+                    ><RouterLink to="/" style="color: black"> {{ $t('Sign off') }}</RouterLink>
                   </a>
                 </li>
               </ul>
@@ -374,10 +384,18 @@ let page_title = 'prueba'
               ></a>
               <ul class="nav nav-second-level">
                 <li>
-                  <a
+                  <a class="active"
                     ><i class="pi pi-list"></i>
                     <span class="hide-menu"
                       ><RouterLink to="/home/request">{{ $t('request-option') }}</RouterLink></span
+                    ></a
+                  >
+                </li>
+                <li>
+                  <a class="active"
+                    ><i class="pi pi-users"></i>
+                    <span class="hide-menu"
+                      ><RouterLink to="/home/group">{{ $t('groups-option') }}</RouterLink></span
                     ></a
                   >
                 </li>
@@ -390,25 +408,28 @@ let page_title = 'prueba'
                   >
                 </li>
                 <li>
-                  <a
+                  <a class="active"
                     ><i class="pi pi-user"></i>
                     <span class="hide-menu"
                       ><RouterLink to="/home/driver">{{ $t('drivers-option') }}</RouterLink></span
                     ></a
                   >
                 </li>
+
                 <li>
                   <a class="active"
-                    ><i class="pi pi-users"></i>
+                    ><i class="pi pi-map"></i>
                     <span class="hide-menu"
-                      ><RouterLink to="/home/driver">{{ $t('groups-option') }}</RouterLink></span
+                      ><RouterLink to="/home/programation">{{
+                        $t('programations-option')
+                      }}</RouterLink></span
                     ></a
                   >
                 </li>
               </ul>
             </li>
             <li class="devider"></li>
-            <li v-if="dato.role != 'Manager'">
+            <li v-if="dato.role == 'Admin'">
               <a href="#" class="waves-effect"
                 ><i class="pi pi-cog"></i>
                 <span class="hide-menu">
@@ -423,16 +444,7 @@ let page_title = 'prueba'
                     ></a
                   >
                 </li>
-                <li>
-                  <a
-                    ><i class="pi pi-map"></i>
-                    <span class="hide-menu"
-                      ><RouterLink to="/home/programation">{{
-                        $t('programations-option')
-                      }}</RouterLink></span
-                    ></a
-                  >
-                </li>
+                <li class="devider"></li>
               </ul>
             </li>
           </ul>
@@ -446,6 +458,32 @@ let page_title = 'prueba'
             </div>
           </div> -->
           <RouterView></RouterView>
+          <Dialog
+            v-model:visible="dialogVisible1"
+            :header="$t('language-title')"
+            :style="{ width: '20vw' }"
+            modal
+            :closable="false"
+            :contentStyle="{ height: '110px' }"
+          >
+            <div style="align-content: center; margin-left: 29%">
+              <button @click="changeLanguage('EN')">
+                <img
+                  src="../assets/banderas/usa.svg"
+                  style="width: 35px; height: 30px; border-radius: 7px"
+                />
+                English
+              </button>
+              <br />
+              <button @click="changeLanguage('ES')">
+                <img src="../assets/banderas/spain.svg" /> Español
+              </button>
+            </div>
+            <template #footer>
+              <Button :label="$t('cancel')" icon="pi pi-times" text @click="dialogVisible1 = false" />
+        
+            </template>
+          </Dialog>
           <div class="right-sidebar">
             <div class="slimscrollright">
               <div class="rpanel-title">
